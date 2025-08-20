@@ -8,7 +8,6 @@
 #include <set>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include "ServerLogger.h"
 
 // ANSI коды цветов для терминала
 const std::vector<std::string> ANSI_COLORS = {

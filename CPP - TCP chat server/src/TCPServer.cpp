@@ -1,4 +1,5 @@
 #include "TCPServer.h"
+#include "Logger.h"
 #include <iostream>
 #include <sstream>
 #include <random>
@@ -47,7 +48,8 @@ bool TCPServer::start() {
     running = true;
     acceptThread = std::thread(&TCPServer::acceptConnections, this);
 
-    ServerLogger::getInstance().logServerStart(port);
+    std::string message = "Server started on port " + std::to_string(port);
+    Logger::info(message.c_str());
 
     return true;
 }
@@ -77,7 +79,7 @@ void TCPServer::stop() {
     }
     clientThreads.clear();
 
-    ServerLogger::getInstance().logServerStop();
+    Logger::info(std::string("Server stopped").c_str());
 }
 
 bool TCPServer::isRunning() const {
@@ -92,8 +94,7 @@ void TCPServer::acceptConnections() {
 
         if (clientSocket == INVALID_SOCKET) {
             if (running) {
-                ServerLogger::getInstance()
-                    .logError("Accept failed: " + std::to_string(WSAGetLastError()));
+                Logger::error(("Accept failed: " + std::to_string(WSAGetLastError())).c_str());
             }
             continue;
         }
@@ -165,12 +166,8 @@ void TCPServer::sendPrivateMessage(SOCKET senderSocket, const std::string& targe
             std::string error = "You cannot send private messages to yourself\n";
             send(senderSocket, error.c_str(), error.size(), 0);
             
-            ServerLogger::getInstance().logPrivateMessageError(
-                senderNickname, 
-                targetNickname, 
-                "Cannot send PM to yourself", 
-                senderColor
-            );
+            std::string logMsg = "[PM Error] " + senderColor + senderNickname + COLOR_RESET + " -> " + targetNickname + ": " + error;
+            Logger::debug(logMsg.c_str());
             return;
         }
         
@@ -179,24 +176,17 @@ void TCPServer::sendPrivateMessage(SOCKET senderSocket, const std::string& targe
         send(targetSocket, toRecipient.c_str(), toRecipient.size(), 0);
         
         // Логируем на сервере
-        ServerLogger::getInstance().logPrivateMessage(
-            senderNickname, 
-            targetNickname, 
-            message, 
-            senderColor, 
-            connectedClients[targetSocket].color
-        );
+        std::string logMsg = "[PM] " + senderColor + senderNickname + COLOR_RESET + 
+                         " -> " + connectedClients[targetSocket].color + targetNickname + COLOR_RESET + ": " + message;
+        Logger::debug(logMsg.c_str());
     } else {
         // Отправляем сообщение об ошибке отправителю
         std::string error = "User '" + targetNickname + "' not found or offline\n";
         send(senderSocket, error.c_str(), error.size(), 0);
         
         // Логируем ошибку
-        ServerLogger::getInstance().logPrivateMessageError(
-            senderNickname, 
-            targetNickname, 
-            "User not found or offline", 
-            senderColor);
+        std::string logMsg = "[PM Error] " + senderColor + senderNickname + COLOR_RESET + " -> " + targetNickname + ": " + error;
+        Logger::debug(logMsg.c_str());
     }
 }
 
@@ -259,14 +249,15 @@ void TCPServer::handleClient(SOCKET clientSocket, sockaddr_in clientAddr) {
             
             // Уведомление сервера
             std::string color = connectedClients[clientSocket].color;
-            ServerLogger::getInstance().logClientConnect(nickname, clientId, color);
+            std::string message = "Client connected: " + color + nickname + COLOR_RESET + " (" + clientId + ")";
+            Logger::debug(message.c_str());
             
             // Приветственное сообщение
-            std::string welcome = "Welcome, " + color + nickname + COLOR_RESET + "! Type /help for commands.\n";
+            std::string welcome = "Welcome, " + color + nickname + COLOR_RESET + "! \n\tType /help for commands.\n";
             sendToClient(clientSocket, welcome);
             
             // Уведомление чата
-            std::string joinMsg = nickname + " joined the chat";
+            std::string joinMsg = color + nickname + COLOR_RESET + " joined the chat";
             broadcastMessage(joinMsg, clientSocket);
         } else {
             std::string error = "Nickname '" + nickname + "' is already taken. Please choose another one.\n";
@@ -344,7 +335,8 @@ void TCPServer::handleClient(SOCKET clientSocket, sockaddr_in clientAddr) {
         {
             std::string color = connectedClients[clientSocket].color;
             std::string nickname = connectedClients[clientSocket].nickname;
-            ServerLogger::getInstance().logMessage(nickname, message, color);
+            std::string logMsg = "[" + color + nickname + COLOR_RESET + "]: " + message;
+            Logger::debug(logMsg.c_str());
         }
     }
 
@@ -370,10 +362,11 @@ void TCPServer::handleClient(SOCKET clientSocket, sockaddr_in clientAddr) {
 
     if (!nickname.empty()) {
         // Уведомление сервера
-        ServerLogger::getInstance().logClientDisconnect(nickname, clientId, color);
+        std::string message = "Client disconnected: " + color + nickname + COLOR_RESET + " (" + clientId + ")";
+        Logger::debug(message.c_str());
         
         // Уведомление чата
-        std::string leaveMsg = nickname + " left the chat";
+        std::string leaveMsg = color + nickname + COLOR_RESET + " left the chat";
         broadcastMessage(leaveMsg, INVALID_SOCKET);
     }
 }
