@@ -20,6 +20,7 @@ add_subdirectory(libs/filelogger)
 # Указываем исходники
 set(SOURCES
     src/main.cpp
+    src/MainWindow.cpp
 )
 
 # Создаём исполняемый файл, WIN32 - для отключения окна консоли
