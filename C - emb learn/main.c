@@ -173,7 +173,7 @@ int main(void)
     // 8.4. =================================
     {
         printf("\t8.4.le\n");
-                    //     a b c d
+                    //     d c b a
         uint32_t value = 0x12345678;
         
         printf("0x%02X\n", value);
@@ -182,7 +182,7 @@ int main(void)
         t.value = value;
 
         t.word.ab = t.word.cd - (t.letter.b + t.letter.d);
-                                     ///   a b c d
+                                     ///   d c b a
         printf("0x%02X\n", t.value); /// 0x55CC5678
     }
 
@@ -231,4 +231,5 @@ void printBinaryInt8(int8_t n)
         }
     }
     printf("\n");
+
 }
