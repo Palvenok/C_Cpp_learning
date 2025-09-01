@@ -26,6 +26,19 @@ typedef union item2
     uint32_t value;    
 }ITEM2;
 
+typedef union item2le
+{
+    struct
+    {
+        uint8_t d, c, b, a;
+    }letter;
+    struct
+    {
+        uint16_t cd, ab;
+    }word;
+    uint32_t value;    
+}ITEM2LE;
+
 int main(void)
 {
     // 1. =================================
@@ -121,7 +134,7 @@ int main(void)
 
         *ptr16 = *(ptr16 + 1) - (*(ptr8 + 1) + *(ptr8 + 3));
                                    ///   a b c d
-        printf("0x%02X\n", value); /// 0x55CC5678
+        printf("0x%02X\n", value); /// 0x123411CC
     }
 
     // 8.2. =================================
@@ -138,9 +151,9 @@ int main(void)
 
         t.u16[0] = t.u16[1] - (t.u8[1] + t.u8[3]);
                                    ///   a b c d
-        printf("0x%02X\n", t.u32); /// 0x55CC5678
+        printf("0x%02X\n", t.u32); /// 0x123411CC
     }
-
+    
     // 8.3. =================================
     {
         printf("\t8.3.\n");
@@ -150,6 +163,22 @@ int main(void)
         printf("0x%02X\n", value);
 
         union item2 t;
+        t.value = value;
+
+        t.word.ab = t.word.cd - (t.letter.b + t.letter.d);
+                                     ///   a b c d
+        printf("0x%02X\n", t.value); /// 0x123411CC
+    }
+
+    // 8.4. =================================
+    {
+        printf("\t8.4.le\n");
+                    //     a b c d
+        uint32_t value = 0x12345678;
+        
+        printf("0x%02X\n", value);
+
+        union item2le t;
         t.value = value;
 
         t.word.ab = t.word.cd - (t.letter.b + t.letter.d);
