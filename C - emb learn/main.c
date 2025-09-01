@@ -119,7 +119,7 @@ int main(void)
         uint8_t* ptr8 = (uint8_t*)&value;
         uint16_t* ptr16 = (uint16_t*)&value;
 
-        *(ptr16 + 1) = *ptr16 - (*ptr8 + *(ptr8 + 2));
+        *ptr16 = *(ptr16 + 1) - (*(ptr8 + 1) + *(ptr8 + 3));
                                    ///   a b c d
         printf("0x%02X\n", value); /// 0x55CC5678
     }
@@ -136,7 +136,7 @@ int main(void)
         union item t;
         t.u32 = value;
 
-        t.u16[1] = t.u16[0] - (t.u8[0] + t.u8[2]);
+        t.u16[0] = t.u16[1] - (t.u8[1] + t.u8[3]);
                                    ///   a b c d
         printf("0x%02X\n", t.u32); /// 0x55CC5678
     }
@@ -152,7 +152,7 @@ int main(void)
         union item2 t;
         t.value = value;
 
-        t.word.cd = t.word.ab - (t.letter.a + t.letter.c);
+        t.word.ab = t.word.cd - (t.letter.b + t.letter.d);
                                      ///   a b c d
         printf("0x%02X\n", t.value); /// 0x55CC5678
     }
